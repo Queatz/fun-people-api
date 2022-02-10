@@ -6,7 +6,7 @@ fun Db.locationWithName(name: String) = one(
     Location::class, """
         for x in @@collection
             filter x.${Location::name.name} == @name
-            return MERGE(x, {
+            return merge(x, {
                 path: x.locationId == null ? [] : [ document(x.locationId) ]
             })
     """, mapOf(
@@ -19,7 +19,7 @@ fun Db.locationWithNameAndParent(name: String, locationId: String?) = one(
         for x in @@collection
             filter x.${Location::name.name} == @name
             filter x.${Location::locationId.name} == @locationId
-            return MERGE(x, {
+            return merge(x, {
                 path: x.locationId == null ? [] : [ document(x.locationId) ]
             })
     """, mapOf(
@@ -42,7 +42,7 @@ fun Db.locationWithName(path: List<String>) = one(
         )
         filter path all != null
         let x = last(path) 
-        return MERGE(x, {
+        return merge(x, {
                 path: x.locationId == null ? [] : [ document(x.locationId) ]
             })
     """, mapOf(
@@ -54,10 +54,23 @@ fun Db.locationWithUrl(url: String) = one(
     Location::class, """
         for x in @@collection
             filter x.${Location::url.name} == @url
-            return MERGE(x, {
+            return merge(x, {
                 path: x.locationId == null ? [] : [ document(x.locationId) ]
             })
     """, mapOf(
         "url" to url
+    )
+)
+
+fun Db.locationsOfLocation(locationId: String) = list(
+    Location::class, """
+        for x in @@collection
+            filter x.${Location::locationId.name} == @locationId
+            sort x.name asc
+            return merge(x, {
+                path: x.locationId == null ? [] : [ document(x.locationId) ]
+            })
+    """, mapOf(
+        "locationId" to locationId.asId(Location::class)
     )
 )

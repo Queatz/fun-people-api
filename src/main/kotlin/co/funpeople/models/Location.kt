@@ -9,6 +9,7 @@ open class Location : Model() {
     var description = ""
     var url = ""
 
+    // Db
     var path: List<Location>? = null
 }
 

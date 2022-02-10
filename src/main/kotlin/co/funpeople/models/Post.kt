@@ -7,4 +7,7 @@ class Post : Model() {
     var locationId = ""
     var personId = ""
     var text = ""
+
+    // Db
+    var person: Person? = null
 }
