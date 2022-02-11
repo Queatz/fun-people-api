@@ -201,7 +201,7 @@ fun Application.configureRouting() {
                     it.url = it.name.nextUrl()
                     it.createdAt = Clock.System.now()
 
-//                it.personId = me // creator
+//                    it.personId = me // creator
 
                     call.respond(db.insert(it))
                 }
@@ -232,7 +232,39 @@ fun Application.configureRouting() {
             }
 
             post("/post/{id}") {
+                call.receive<Post>().let {
+                    val person = call.principal<PersonPrincipal>()!!.person
+                    val post = db.document(Post::class, call.parameters["id"]!!)
 
+                    call.respond(
+                        if (post == null) {
+                            HttpStatusCode.NotFound
+                        } else if (post.personId != person.id) {
+                            HttpStatusCode.NotFound
+                        } else {
+                            it.text.takeIf { it.isNotBlank() }?.let { post.text = it }
+
+                            db.update(post)
+                        }
+                    )
+                }
+            }
+
+            post("/post/{id}/remove") {
+                val person = call.principal<PersonPrincipal>()!!.person
+                val post = db.document(Post::class, call.parameters["id"]!!)
+
+                call.respond(
+                    if (post == null) {
+                        HttpStatusCode.NotFound
+                    } else if (post.personId != person.id) {
+                        HttpStatusCode.NotFound
+                    } else {
+                        db.delete(post)
+
+                        HttpStatusCode.OK
+                    }
+                )
             }
 
             post("/messages") {

@@ -10,7 +10,7 @@ fun Db.postsByLocation(locationId: String) = list(
             filter x.${Post::locationId.name} == @locationId
             sort x.${Post::createdAt.name} desc
             return merge(x, {
-                ${Post::person.name}: document(x.${Post::personId.name})
+                ${Post::person.name}: unset(document(x.${Post::personId.name}), 'email', 'seen')
             })
     """,
     mapOf(

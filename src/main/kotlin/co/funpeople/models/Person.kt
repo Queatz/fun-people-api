@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 class Person : Model() {
     var name = ""
-    var email = ""
+    var email: String? = null
     var introduction = ""
     var seen: Instant? = null
 }
