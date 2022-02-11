@@ -9,6 +9,7 @@ fun Db.postsByLocation(locationId: String) = list(
         for x in @@collection
             filter x.${Post::locationId.name} == @locationId
             sort x.${Post::createdAt.name} desc
+            limit 20
             return merge(x, {
                 ${Post::person.name}: unset(document(x.${Post::personId.name}), 'email', 'seen')
             })

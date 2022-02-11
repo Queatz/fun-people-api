@@ -67,6 +67,7 @@ fun Db.locationsOfLocation(locationId: String) = list(
         for x in @@collection
             filter x.${Location::locationId.name} == @locationId
             sort x.name asc
+            limit 20
             return merge(x, {
                 ${Location::path.name}: x.${Location::locationId.name} == null ? [] : [ document(x.${Location::locationId.name}) ]
             })
