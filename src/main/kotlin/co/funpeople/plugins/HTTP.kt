@@ -15,7 +15,7 @@ fun Application.configureHTTP() {
         method(HttpMethod.Patch)
         header(HttpHeaders.Authorization)
         host("localhost:4200")
-        host("funpeople.co")
+        host("hangoutville.com", listOf("https"))
     }
 
     install(Compression)

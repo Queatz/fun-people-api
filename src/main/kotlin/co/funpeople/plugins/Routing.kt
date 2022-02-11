@@ -1,9 +1,7 @@
 package co.funpeople.plugins
 
 import co.funpeople.db.*
-import co.funpeople.models.Location
-import co.funpeople.models.Person
-import co.funpeople.models.Post
+import co.funpeople.models.*
 import com.mapbox.api.geocoding.v5.GeocodingCriteria
 import com.mapbox.api.geocoding.v5.MapboxGeocoding
 import com.mapbox.api.geocoding.v5.models.CarmenFeature
@@ -249,6 +247,44 @@ fun Application.configureRouting() {
                             it.text.takeIf { it.isNotBlank() }?.let { post.text = it }
 
                             db.update(post)
+                        }
+                    )
+                }
+            }
+
+            post("/post/{id}/reply") {
+                call.receive<Message>().let {
+                    val person = call.principal<PersonPrincipal>()!!.person
+                    val post = db.document(Post::class, call.parameters["id"]!!)
+
+                    call.respond(
+                        if (it.text.isBlank()) {
+                            HttpStatusCode.BadRequest.description("Missing 'text'")
+                        } else if (post == null) {
+                            HttpStatusCode.NotFound
+                        } else if (post.personId == person.id) {
+                            HttpStatusCode.BadRequest
+                        } else {
+                            val group = db.groupOf(listOf(person.id!!, post.personId)) ?: db.insert(Group()).also { group ->
+                                db.insert(Member().also {
+                                    it.groupId = group.id!!
+                                    it.personId = person.id!!
+                                })
+                                db.insert(Member().also {
+                                    it.groupId = group.id!!
+                                    it.personId = post.personId
+                                })
+                            }
+
+                            Message().apply {
+                                postId = post.id
+                                locationId = post.locationId
+                                groupId = group.id!!
+                                personId = person.id!!
+                                text = it.text
+                            }.let { db.insert(it) }
+
+                            HttpStatusCode.OK
                         }
                     )
                 }

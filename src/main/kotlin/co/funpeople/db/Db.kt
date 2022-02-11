@@ -99,4 +99,4 @@ data class CollectionConfig(
 internal fun String.asKey() = this.split("/").last()
 internal fun <T : Model> String.asId(klass: KClass<T>) = if (this.contains("/")) this else "${klass.collection()}/$this"
 
-private fun <T : Model> KClass<T>.collection() = simpleName!!.lowercase()
+fun <T : Model> KClass<T>.collection() = simpleName!!.lowercase()
