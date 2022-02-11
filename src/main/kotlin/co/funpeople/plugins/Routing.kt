@@ -222,6 +222,11 @@ fun Application.configureRouting() {
                     it.createdAt = Clock.System.now()
                     it.personId = call.principal<PersonPrincipal>()!!.person.id!!
 
+                    if (db.postsByPersonAndLocation(it.personId, it.locationId).isNotEmpty()) {
+                        call.respond(HttpStatusCode.BadRequest.description("Post already exists in this location"))
+                        return@also
+                    }
+
                     call.respond(db.insert(it))
                 }
             }
