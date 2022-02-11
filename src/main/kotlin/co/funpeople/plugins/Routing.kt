@@ -85,6 +85,7 @@ fun Application.configureRouting() {
                     db.locationWithNameAndParent(n, acc?.id) ?: db.insert(Location().apply {
                         name = n
                         locationId = acc?.id
+                        system = true
 
                         url = name.nextUrl()
                         this.path = acc?.let { listOf(it) }
@@ -150,7 +151,23 @@ fun Application.configureRouting() {
                 }
             }
             post("/location/{id}") {
+                call.receive<Location>().also {
+                    val location = db.document(Location::class, call.parameters["id"]!!)
 
+                    if (location == null) {
+                        call.respond(HttpStatusCode.NotFound)
+                        return@also
+                    }
+
+                    if (it.description.isBlank()) {
+                        call.respond(HttpStatusCode.BadRequest.description("Missing 'description'"))
+                        return@also
+                    }
+
+                    location.description = it.description
+
+                    call.respond(db.update(location))
+                }
             }
             post("/locations") {
                 call.receive<Location>().also {

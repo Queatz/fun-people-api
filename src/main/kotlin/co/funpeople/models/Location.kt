@@ -8,6 +8,7 @@ open class Location : Model() {
     var name = ""
     var description = ""
     var url = ""
+    var system = false
 
     // Db
     var path: List<Location>? = null
