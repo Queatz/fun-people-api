@@ -74,3 +74,14 @@ fun Db.locationsOfLocation(locationId: String) = list(
         "locationId" to locationId.asId(Location::class)
     )
 )
+
+fun Db.topLocations() = list(
+    Location::class, """
+        for x in @@collection
+            sort rand()
+            limit 5
+            return merge(x, {
+                ${Location::path.name}: x.${Location::locationId.name} == null ? [] : [ document(x.${Location::locationId.name}) ]
+            })
+    """
+)

@@ -76,6 +76,10 @@ fun Application.configureRouting() {
             call.respond(db.locationWithUrl(call.parameters["url"]!!) ?: HttpStatusCode.NotFound)
         }
 
+        get("/top-locations") {
+            call.respond(db.topLocations())
+        }
+
         get("/location-name/{path...}") {
             val path = call.parameters.getAll("path")!!
             val location = db.locationWithName(path)
