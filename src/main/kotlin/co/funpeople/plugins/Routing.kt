@@ -71,9 +71,11 @@ fun Application.configureRouting() {
             }
         }
 
+
         get("/location-url/{url}") {
             call.respond(db.locationWithUrl(call.parameters["url"]!!) ?: HttpStatusCode.NotFound)
         }
+
         get("/location-name/{path...}") {
             val path = call.parameters.getAll("path")!!
             val location = db.locationWithName(path)
@@ -93,19 +95,24 @@ fun Application.configureRouting() {
                 } ?: HttpStatusCode.NotFound)
             }
         }
+
         get("/location") {
             call.respond(db.locationWithName("") ?: HttpStatusCode.NotFound)
         }
+
         get("/location/{id}") {
             call.respond(db.document(Location::class, call.parameters["id"]!!) ?: HttpStatusCode.NotFound)
         }
+
         get("/location/{id}/locations") {
             call.respond(db.locationsOfLocation(call.parameters["id"]!!))
         }
+
         get("/location/{id}/posts") {
             call.respond(db.postsByLocation(call.parameters["id"]!!))
 
         }
+
         get("/search/{query}") {
             val result = MapboxGeocoding.builder()
                 .accessToken(mapboxToken)
@@ -124,11 +131,17 @@ fun Application.configureRouting() {
                 }
             })
         }
+
         get("/groups") {
 
         }
+
         get("/group/{id}") {
 
+        }
+
+        get("/person/{id}") {
+            call.respond(db.document(Person::class, call.parameters["id"]!!) ?: HttpStatusCode.NotFound)
         }
 
         authenticate {
@@ -136,20 +149,23 @@ fun Application.configureRouting() {
                 call.respond(call.principal<PersonPrincipal>()!!.person)
             }
 
+            get("/me/posts") {
+                call.respond(db.postsByPerson(call.principal<PersonPrincipal>()!!.person.id!!))
+            }
+
             post("/me") {
                 call.receive<Person>().let {
                     val person = call.principal<PersonPrincipal>()!!.person
 
-                    when {
-                        it.name.isNotBlank() -> person.name = it.name
-                        else -> {}
-                    }
+                    it.name.takeIf { it.isNotBlank() }?.let { person.name = it }
+                    it.introduction.takeIf { it.isNotBlank() }?.let { person.introduction = it }
 
                     person.seen = Clock.System.now()
 
                     call.respond(db.update(person))
                 }
             }
+
             post("/location/{id}") {
                 call.receive<Location>().also {
                     val location = db.document(Location::class, call.parameters["id"]!!)
@@ -169,6 +185,7 @@ fun Application.configureRouting() {
                     call.respond(db.update(location))
                 }
             }
+
             post("/locations") {
                 call.receive<Location>().also {
                     if (it.name.isBlank()) {
@@ -189,6 +206,7 @@ fun Application.configureRouting() {
                     call.respond(db.insert(it))
                 }
             }
+
             post("/posts") {
                 call.receive<Post>().also {
                     if (it.text.isBlank()) {
@@ -207,12 +225,15 @@ fun Application.configureRouting() {
                     call.respond(db.insert(it))
                 }
             }
+
             post("/post/{id}") {
 
             }
+
             post("/messages") {
 
             }
+
             post("/message/{id}") {
 
             }

@@ -7,7 +7,7 @@ fun Db.locationWithName(name: String) = one(
         for x in @@collection
             filter x.${Location::name.name} == @name
             return merge(x, {
-                path: x.locationId == null ? [] : [ document(x.locationId) ]
+                ${Location::path.name}: x.locationId == null ? [] : [ document(x.locationId) ]
             })
     """, mapOf(
         "name" to name
@@ -20,7 +20,7 @@ fun Db.locationWithNameAndParent(name: String, locationId: String?) = one(
             filter x.${Location::name.name} == @name
             filter x.${Location::locationId.name} == @locationId
             return merge(x, {
-                path: x.locationId == null ? [] : [ document(x.locationId) ]
+                ${Location::path.name}: x.${Location::locationId.name} == null ? [] : [ document(x.${Location::locationId.name}) ]
             })
     """, mapOf(
         "locationId" to locationId,
@@ -43,7 +43,7 @@ fun Db.locationWithName(path: List<String>) = one(
         filter path all != null
         let x = last(path) 
         return merge(x, {
-                path: x.locationId == null ? [] : [ document(x.locationId) ]
+                ${Location::path.name}: x.${Location::locationId.name} == null ? [] : [ document(x.${Location::locationId.name}) ]
             })
     """, mapOf(
         "path" to path
@@ -55,7 +55,7 @@ fun Db.locationWithUrl(url: String) = one(
         for x in @@collection
             filter x.${Location::url.name} == @url
             return merge(x, {
-                path: x.locationId == null ? [] : [ document(x.locationId) ]
+                ${Location::path.name}: x.${Location::locationId.name} == null ? [] : [ document(x.${Location::locationId.name}) ]
             })
     """, mapOf(
         "url" to url
@@ -68,7 +68,7 @@ fun Db.locationsOfLocation(locationId: String) = list(
             filter x.${Location::locationId.name} == @locationId
             sort x.name asc
             return merge(x, {
-                path: x.locationId == null ? [] : [ document(x.locationId) ]
+                ${Location::path.name}: x.${Location::locationId.name} == null ? [] : [ document(x.${Location::locationId.name}) ]
             })
     """, mapOf(
         "locationId" to locationId.asId(Location::class)

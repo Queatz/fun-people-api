@@ -10,4 +10,5 @@ class Post : Model() {
 
     // Db
     var person: Person? = null
+    var location: Location? = null
 }
