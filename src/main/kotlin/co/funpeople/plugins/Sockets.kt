@@ -1,8 +1,8 @@
 package co.funpeople.plugins
 
-import co.funpeople.db.member
 import co.funpeople.db.members
 import co.funpeople.db.personWithEmail
+import co.funpeople.models.Member
 import co.funpeople.models.Message
 import co.funpeople.models.Person
 import io.ktor.server.application.*
@@ -37,6 +37,13 @@ data class TokenMessage (
     val token: String
 )
 
+@Serializable
+data class TypingMessage (
+    val groupId: String,
+    val typing: Boolean,
+    var name: String? = null
+)
+
 fun Application.configureSockets() {
     install(WebSockets) {
         pingPeriod = 15.seconds.toJavaDuration()
@@ -51,6 +58,16 @@ fun Application.configureSockets() {
         webSocket("/ws") {
             val thisConnection = Connection(this)
             connections += thisConnection
+
+            fun relay(members: List<Member>, frame: Frame) {
+                launch {
+                    connections.filter {
+                        members.any { member -> member.personId == it.person?.id }
+                    }.forEach {
+                        it.session.outgoing.send(frame)
+                    }
+                }
+            }
 
             fun receiveMessage(messageText: Message) {
                 if (thisConnection.person == null) {
@@ -81,13 +98,25 @@ fun Application.configureSockets() {
                     db.update(it)
                 }
 
-                launch {
-                    connections.filter {
-                        members.any { member -> member.personId == it.person?.id }
-                    }.forEach {
-                        it.session.outgoing.send(Frame.Text(json.encodeToString(message)))
-                    }
+                relay(members, Frame.Text(json.encodeToString(message)))
+            }
+
+            fun receiveTyping(typing: TypingMessage) {
+                if (thisConnection.person == null) {
+                    return
                 }
+
+                val members = db.members(typing.groupId)
+
+                if (members.none { it.personId == thisConnection.person!!.id }) {
+                    return
+                }
+
+                relay(members.filter {
+                    it.personId != thisConnection.person!!.id
+                }, Frame.Text(json.encodeToString(typing.also {
+                    it.name = thisConnection.person!!.name
+                })))
             }
 
             for (frame in incoming) {
@@ -101,12 +130,14 @@ fun Application.configureSockets() {
                             ]?.let {
                                 db.personWithEmail(it)
                             }
+                        } else if (text.contains("\"typing\":")) {
+                            receiveTyping(json.decodeFromString(text))
                         } else {
                             receiveMessage(json.decodeFromString(text))
                         }
 
                         if (text.equals("bye", ignoreCase = true)) {
-                            close(CloseReason(CloseReason.Codes.NORMAL, "buy"))
+                            close(CloseReason(CloseReason.Codes.NORMAL, "bye"))
                         }
                     }
                     else -> {

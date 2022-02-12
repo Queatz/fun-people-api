@@ -7,7 +7,7 @@ fun Db.personWithEmail(email: String) = one(
         upsert { ${Person::email.name}: @email }
             insert { ${Person::email.name}: @email, ${Person::seen.name}: DATE_ISO8601(DATE_NOW()), ${Person::createdAt.name}: DATE_ISO8601(DATE_NOW()) }
             update { ${Person::seen.name}: DATE_ISO8601(DATE_NOW()) }
-            in @@collection OPTION { ignoreErrors: true }
+            in @@collection options { ignoreErrors: true }
             return NEW
     """,
     mapOf(
