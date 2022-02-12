@@ -28,6 +28,14 @@ fun Db.groups(personId: String) = list(Group::class, """
                     return member
             ) == 1
             limit 20
+            let latest = first(
+                for message in ${Message::class.collection()}
+                    filter message.${Member::groupId.name} == x._id
+                    sort message.createdAt desc
+                    limit 1
+                    return message
+            )
+            sort latest.createdAt desc
             return merge(x, {
                 members: (
                     for member in ${Member::class.collection()}
@@ -36,13 +44,7 @@ fun Db.groups(personId: String) = list(Group::class, """
                             person: unset(document(member.personId), 'email', 'seen')
                         })
                 ),
-                latest: first(
-                    for message in ${Message::class.collection()}
-                        filter message.${Member::groupId.name} == x._id
-                        sort message.createdAt desc
-                        limit 1
-                        return message
-                )
+                latest: latest
             })
     """, mapOf(
         "personId" to personId

@@ -65,6 +65,7 @@ fun Application.configureSockets() {
                     person = Person().also {
                         it.id = thisConnection.person!!.id
                         it.name = thisConnection.person!!.name
+                        it.introduction = thisConnection.person!!.introduction
                     }
                     personId = thisConnection.person!!.id!!
                     groupId = messageText.groupId
