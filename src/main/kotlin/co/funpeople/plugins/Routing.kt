@@ -180,6 +180,21 @@ fun Application.configureRouting() {
                 call.respond(db.messagesOfGroup(groupId))
             }
 
+            post("/group/{id}/leave") {
+                val person = call.principal<PersonPrincipal>()!!.person
+                val member = db.member(call.parameters["id"]!!, person.id!!)
+
+                call.respond(
+                    if (member == null) {
+                        HttpStatusCode.NotFound
+                    } else {
+                        db.delete(member)
+
+                        HttpStatusCode.OK
+                    }
+                )
+            }
+
             post("/location/{id}") {
                 call.receive<Location>().also {
                     val location = db.document(Location::class, call.parameters["id"]!!)
