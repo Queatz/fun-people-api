@@ -216,12 +216,18 @@ fun Application.configureRouting() {
                         return@also
                     }
 
-                    it.url = it.name.nextUrl()
-                    it.createdAt = Clock.System.now()
+                    val location = Location().apply {
+                        url = it.name.nextUrl()
+                        name = it.name
+                        description = it.description
+                        locationId = it.locationId
+                        createdAt = Clock.System.now()
+                        activity = Clock.System.now()
+                    }
 
 //                    if (managed) it.ownerId = me
 
-                    call.respond(db.insert(it))
+                    call.respond(db.insert(location))
                 }
             }
 
@@ -244,6 +250,8 @@ fun Application.configureRouting() {
                         call.respond(HttpStatusCode.BadRequest.description("Post already exists in this location"))
                         return@also
                     }
+
+                    db.updateLocationActivity(it.locationId)
 
                     call.respond(db.insert(it))
                 }
@@ -305,6 +313,8 @@ fun Application.configureRouting() {
                                 it.readUntil = Clock.System.now()
                                 db.update(it)
                             }
+
+                            db.updateLocationActivity(post.locationId)
 
                             HttpStatusCode.OK
                         }

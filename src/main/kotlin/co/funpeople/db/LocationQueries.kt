@@ -14,6 +14,16 @@ fun Db.locationWithName(name: String) = one(
     )
 )
 
+fun Db.updateLocationActivity(locationId: String) = one(
+    Location::class, """
+        for x in @@collection
+            filter x._id == @locationId
+            update { _key: x._key, activity: DATE_ISO8601(DATE_NOW()) } in @@collection
+    """, mapOf(
+        "locationId" to locationId.asId(Location::class)
+    )
+)
+
 fun Db.locationWithNameAndParent(name: String, locationId: String?) = one(
     Location::class, """
         for x in @@collection
@@ -66,7 +76,7 @@ fun Db.locationsOfLocation(locationId: String) = list(
     Location::class, """
         for x in @@collection
             filter x.${Location::locationId.name} == @locationId
-            sort x.name asc
+            sort x.${Location::activity.name} desc
             limit 20
             return merge(x, {
                 ${Location::path.name}: x.${Location::locationId.name} == null ? [] : [ document(x.${Location::locationId.name}) ]

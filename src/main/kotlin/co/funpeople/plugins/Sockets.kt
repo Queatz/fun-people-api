@@ -88,7 +88,7 @@ fun Application.configureSockets() {
                     }
                     personId = thisConnection.person!!.id!!
                     groupId = messageText.groupId
-                    text = messageText.text
+                    text = messageText.text.trim()
                 }.also {
                     db.insert(it)
                 }
