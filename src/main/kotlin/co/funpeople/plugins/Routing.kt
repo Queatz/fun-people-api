@@ -13,7 +13,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
-import java.awt.SystemColor.text
 import java.util.logging.Logger
 import kotlin.random.Random
 
@@ -47,7 +46,7 @@ fun Application.configureRouting() {
                     when (it.code) {
                         null -> {
                             val code = Random.nextInt(100000, 999999).toString()
-                            signInCodes[it.email] = code
+                            signInCodes[it.email.trim()] = code
 
                             // todo email code
 
@@ -56,13 +55,13 @@ fun Application.configureRouting() {
                             HttpStatusCode.OK
                         }
                         else -> {
-                            if (signInCodes[it.email] != it.code) {
+                            if (signInCodes[it.email.trim()] != it.code?.trim()) {
                                 HttpStatusCode.NotFound
                             } else {
                                 val token = (1..64).token()
-                                sessions[token] = it.email
+                                sessions[token] = it.email.trim()
 
-                                Token(token, db.personWithEmail(it.email))
+                                Token(token, db.personWithEmail(it.email.trim()))
                             }
                         }
                     }
@@ -152,8 +151,8 @@ fun Application.configureRouting() {
                 call.receive<Person>().let {
                     val person = call.principal<PersonPrincipal>()!!.person
 
-                    it.name.takeIf { it.isNotBlank() }?.let { person.name = it }
-                    it.introduction.takeIf { it.isNotBlank() }?.let { person.introduction = it }
+                    it.name.trim().takeIf { it.isNotBlank() }?.let { person.name = it }
+                    it.introduction.trim().takeIf { it.isNotBlank() }?.let { person.introduction = it }
 
                     person.seen = Clock.System.now()
 
@@ -195,7 +194,7 @@ fun Application.configureRouting() {
                         return@also
                     }
 
-                    location.description = it.description
+                    location.description = it.description.trim()
 
                     call.respond(db.update(location).also {
                         if (it.locationId != null) {
@@ -261,7 +260,7 @@ fun Application.configureRouting() {
                         } else if (post.personId != person.id) {
                             HttpStatusCode.NotFound
                         } else {
-                            it.text.takeIf { it.isNotBlank() }?.let { post.text = it }
+                            it.text.trim().takeIf { it.isNotBlank() }?.let { post.text = it }
 
                             db.update(post)
                         }
@@ -347,7 +346,7 @@ fun Application.configureRouting() {
 
                     val idea = Idea().apply {
                         personId = call.principal<PersonPrincipal>()!!.person.id!!
-                        idea = it.idea
+                        idea = it.idea.trim()
                     }
 
                     db.insert(idea)
