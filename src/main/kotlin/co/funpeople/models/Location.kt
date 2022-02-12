@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 open class Location : Model() {
     var locationId: String? = null
+    var ownerId: String? = null
     var name = ""
     var description = ""
     var url = ""

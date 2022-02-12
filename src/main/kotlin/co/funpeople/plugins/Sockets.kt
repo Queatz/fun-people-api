@@ -1,5 +1,6 @@
 package co.funpeople.plugins
 
+import co.funpeople.db.member
 import co.funpeople.db.members
 import co.funpeople.db.personWithEmail
 import co.funpeople.models.Message
@@ -9,6 +10,7 @@ import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -72,6 +74,11 @@ fun Application.configureSockets() {
                     text = messageText.text
                 }.also {
                     db.insert(it)
+                }
+
+                members.firstOrNull { it.personId == thisConnection.person!!.id!! }?.let {
+                    it.readUntil = Clock.System.now()
+                    db.update(it)
                 }
 
                 launch {

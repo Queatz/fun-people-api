@@ -13,6 +13,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
+import java.awt.SystemColor.text
 import java.util.logging.Logger
 import kotlin.random.Random
 
@@ -71,7 +72,7 @@ fun Application.configureRouting() {
 
 
         get("/location-url/{url}") {
-            call.respond(db.locationWithUrl(call.parameters["url"]!!) ?: HttpStatusCode.NotFound)
+            call.respond(db.locationWithUrl(call.parameters["url"]!!.lowercase()) ?: HttpStatusCode.NotFound)
         }
 
         get("/top-locations") {
@@ -196,7 +197,11 @@ fun Application.configureRouting() {
 
                     location.description = it.description
 
-                    call.respond(db.update(location))
+                    call.respond(db.update(location).also {
+                        if (it.locationId != null) {
+                            it.path = listOfNotNull(db.document(Location::class, it.locationId!!))
+                        }
+                    })
                 }
             }
 
@@ -215,7 +220,7 @@ fun Application.configureRouting() {
                     it.url = it.name.nextUrl()
                     it.createdAt = Clock.System.now()
 
-//                    it.personId = me // creator
+//                    if (managed) it.ownerId = me
 
                     call.respond(db.insert(it))
                 }
@@ -297,6 +302,11 @@ fun Application.configureRouting() {
                                 text = it.text
                             }.let { db.insert(it) }
 
+                            db.member(group.id!!, person.id!!)?.let {
+                                it.readUntil = Clock.System.now()
+                                db.update(it)
+                            }
+
                             HttpStatusCode.OK
                         }
                     )
@@ -325,7 +335,25 @@ fun Application.configureRouting() {
             }
 
             post("/message/{id}") {
+                // todo delete
+            }
 
+            post("/ideas") {
+                call.receive<Idea>().also {
+                    if (it.idea.isBlank()) {
+                        call.respond(HttpStatusCode.BadRequest)
+                        return@also
+                    }
+
+                    val idea = Idea().apply {
+                        personId = call.principal<PersonPrincipal>()!!.person.id!!
+                        idea = it.idea
+                    }
+
+                    db.insert(idea)
+
+                    call.respond(HttpStatusCode.OK)
+                }
             }
         }
     }
@@ -342,7 +370,9 @@ private fun String.nextUrl() = ((generateSequence(1) { it + 1 }
     } else "${asUrl()}-$it"
 }
 
-private fun String.asUrl() = lowercase().replace("[^\\p{L}]+".toRegex(), "-")
+private fun String.asUrl() = lowercase().replace("'", "").replace("[^\\p{L}]+".toRegex(), "-")
+    .dropWhile { it == '-' }
+    .dropLastWhile { it == '-' }
 
 private fun CarmenFeature.path() = context()
     ?.filter {
