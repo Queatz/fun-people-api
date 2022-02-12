@@ -8,4 +8,7 @@ class Member : Model() {
     var groupId = ""
     var personId = ""
     var readUntil = Instant.fromEpochMilliseconds(0)
+
+    // Db
+    var person: Person? = null
 }

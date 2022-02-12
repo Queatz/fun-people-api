@@ -134,14 +134,6 @@ fun Application.configureRouting() {
             })
         }
 
-        get("/groups") {
-
-        }
-
-        get("/group/{id}") {
-
-        }
-
         get("/person/{id}") {
             call.respond(db.document(Person::class, call.parameters["id"]!!) ?: HttpStatusCode.NotFound)
         }
@@ -166,6 +158,22 @@ fun Application.configureRouting() {
 
                     call.respond(db.update(person))
                 }
+            }
+
+            get("/groups") {
+                call.respond(db.groups(call.principal<PersonPrincipal>()!!.person.id!!))
+            }
+
+            get("/group/{id}/messages") {
+                val groupId = call.parameters["id"]!!
+                val person = call.principal<PersonPrincipal>()!!.person
+
+                if (!db.members(groupId).any { it.personId == person.id }) {
+                    call.respond(HttpStatusCode.NotFound)
+                    return@get
+                }
+
+                call.respond(db.messagesOfGroup(groupId))
             }
 
             post("/location/{id}") {
@@ -269,6 +277,7 @@ fun Application.configureRouting() {
                                 db.insert(Member().also {
                                     it.groupId = group.id!!
                                     it.personId = person.id!!
+                                    it.readUntil = Clock.System.now()
                                 })
                                 db.insert(Member().also {
                                     it.groupId = group.id!!

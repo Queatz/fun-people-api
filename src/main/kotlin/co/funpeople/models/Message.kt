@@ -11,5 +11,5 @@ class Message : Model() {
     var text = ""
 
     var person: Person? = null
-    var post: Post? = null
+    var location: Location? = null
 }
