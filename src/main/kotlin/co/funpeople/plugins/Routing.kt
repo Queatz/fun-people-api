@@ -167,11 +167,15 @@ fun Application.configureRouting() {
             get("/group/{id}/messages") {
                 val groupId = call.parameters["id"]!!
                 val person = call.principal<PersonPrincipal>()!!.person
+                val member = db.members(groupId).firstOrNull { it.personId == person.id }
 
-                if (!db.members(groupId).any { it.personId == person.id }) {
+                if (member == null) {
                     call.respond(HttpStatusCode.NotFound)
                     return@get
                 }
+
+                member.readUntil = Clock.System.now()
+                db.update(member)
 
                 call.respond(db.messagesOfGroup(groupId))
             }
