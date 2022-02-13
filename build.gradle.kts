@@ -1,11 +1,20 @@
+import groovy.json.JsonSlurper
+import org.jetbrains.kotlin.utils.addToStdlib.cast
+
 val ktor_version: String by project
 val kotlin_version: String by project
 val logback_version: String by project
+val mapboxDownloadKey: String by project
 
 plugins {
     application
     kotlin("jvm") version "1.6.10"
     kotlin("plugin.serialization") version "1.6.10"
+    id("com.github.johnrengelman.shadow") version "7.0.0"
+}
+
+kotlin.sourceSets.all {
+    languageSettings.optIn("kotlin.RequiresOptIn")
 }
 
 group = "co.funpeople"
@@ -23,14 +32,14 @@ repositories {
         authentication { create<BasicAuthentication>("basic") }
         credentials {
             username = "mapbox"
-            // todo move to secrets.gradle.properties
-            password = "sk.eyJ1IjoiamFjb2JmZXJyZXJvIiwiYSI6ImNremZycmN3ZTBzOWwyb29ibGFlZXljNGcifQ.QwuQxv0iTMgAjf6s6oY2xg"
+            password = mapboxKey()
         }
     }
     google()
 }
 
 dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.0")
     implementation("io.ktor:ktor-server-core-jvm:$ktor_version")
     implementation("io.ktor:ktor-server-cors-jvm:$ktor_version")
     implementation("io.ktor:ktor-server-compression:$ktor_version")
@@ -55,4 +64,18 @@ dependencies {
     implementation("com.mapbox.mapboxsdk:mapbox-sdk-core:6.2.0")
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
+}
+
+tasks{
+    shadowJar {
+        manifest {
+            attributes(Pair("Main-Class", "com.example.ApplicationKt"))
+        }
+    }
+}
+
+fun mapboxKey(): String? {
+    val jsonFile = file("secrets.json")
+    val result = JsonSlurper().parse(jsonFile).cast<Map<String, String>>()
+    return result["mapboxDownloadKey"]
 }

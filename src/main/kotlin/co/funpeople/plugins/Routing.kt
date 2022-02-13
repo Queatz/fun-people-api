@@ -2,6 +2,8 @@ package co.funpeople.plugins
 
 import co.funpeople.db.*
 import co.funpeople.models.*
+import co.funpeople.services.Emailing
+import co.funpeople.services.Secrets
 import com.mapbox.api.geocoding.v5.GeocodingCriteria
 import com.mapbox.api.geocoding.v5.MapboxGeocoding
 import com.mapbox.api.geocoding.v5.models.CarmenFeature
@@ -16,12 +18,9 @@ import kotlinx.serialization.Serializable
 import java.util.logging.Logger
 import kotlin.random.Random
 
-private val internalDb = Db()
-
-val db: Db get() = synchronized(internalDb) { internalDb }
-
-// todo move to secrets.json
-const val mapboxToken = "pk.eyJ1IjoiamFjb2JmZXJyZXJvIiwiYSI6ImNraXdyY211eTBlMmcycW02eDNubWNpZzcifQ.1KtSoMzrPCM0A8UVtI_gdg"
+val db = Db()
+val secrets = Secrets()
+val emailing = Emailing()
 
 val signInCodes = mutableMapOf<String, String>()
 
@@ -47,9 +46,11 @@ fun Application.configureRouting() {
                             val code = Random.nextInt(100000, 999999).toString()
                             signInCodes[it.email.trim()] = code
 
-                            // todo email code
-
-                            Logger.getGlobal().info("Sign in code sent: $code")
+                            if (true) {
+                                emailing.send(it.email.trim(), "$code - have fun!", "$code is your Hangoutville sign in code")
+                            } else {
+                                Logger.getGlobal().info("Sign in code sent: $code")
+                            }
 
                             HttpStatusCode.OK
                         }
@@ -120,7 +121,7 @@ fun Application.configureRouting() {
 
         get("/search/{query}") {
             val result = MapboxGeocoding.builder()
-                .accessToken(mapboxToken)
+                .accessToken(secrets.config.mapboxApiKey)
                 .autocomplete(true)
                 .query(call.parameters["query"]!!)
                 .geocodingTypes(GeocodingCriteria.TYPE_PLACE)
