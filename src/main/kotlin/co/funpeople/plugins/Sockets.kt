@@ -1,5 +1,6 @@
 package co.funpeople.plugins
 
+import co.funpeople.db.authWithToken
 import co.funpeople.db.members
 import co.funpeople.db.personWithEmail
 import co.funpeople.models.Member
@@ -125,9 +126,7 @@ fun Application.configureSockets() {
                         val text = frame.readText()
 
                         if (text.contains("\"token\":")) {
-                            thisConnection.person = sessions[
-                                    json.decodeFromString<TokenMessage>(text).token
-                            ]?.let {
+                            thisConnection.person = db.authWithToken(json.decodeFromString<TokenMessage>(text).token)?.email?.let {
                                 db.personWithEmail(it)
                             }
                         } else if (text.contains("\"typing\":")) {

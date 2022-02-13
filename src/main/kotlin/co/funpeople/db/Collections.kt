@@ -26,5 +26,9 @@ fun collections() = listOf(
         ensurePersistentIndex(listOf("locationId"), PersistentIndexOptions())
         ensurePersistentIndex(listOf("personId"), PersistentIndexOptions())
     },
-    Idea::class.db {}
+    Idea::class.db {},
+    Auth::class.db {
+        ensurePersistentIndex(listOf("token"), PersistentIndexOptions())
+        ensurePersistentIndex(listOf("email"), PersistentIndexOptions())
+    }
 )

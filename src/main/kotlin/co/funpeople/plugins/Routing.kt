@@ -16,23 +16,22 @@ import kotlinx.serialization.Serializable
 import java.util.logging.Logger
 import kotlin.random.Random
 
-val db = Db()
+private val internalDb = Db()
+
+val db: Db get() = synchronized(internalDb) { internalDb }
 
 // todo move to secrets.json
 const val mapboxToken = "pk.eyJ1IjoiamFjb2JmZXJyZXJvIiwiYSI6ImNraXdyY211eTBlMmcycW02eDNubWNpZzcifQ.1KtSoMzrPCM0A8UVtI_gdg"
 
 val signInCodes = mutableMapOf<String, String>()
-val sessions = mutableMapOf<String, String>()
 
 fun Application.configureRouting() {
     install(Authentication) {
         bearer {
             validate {
-                sessions[it.token]?.let {
-                    db.personWithEmail(it)
-                }?.let {
-                    PersonPrincipal(it)
-                }
+                db.authWithToken(it.token)?.email
+                    ?.let { db.personWithEmail(it) }
+                    ?.let { PersonPrincipal(it) }
             }
         }
     }
@@ -59,7 +58,11 @@ fun Application.configureRouting() {
                                 HttpStatusCode.NotFound
                             } else {
                                 val token = (1..64).token()
-                                sessions[token] = it.email.trim()
+
+                                db.insert(Auth().apply {
+                                    this.token = token
+                                    email = it.email.trim()
+                                })
 
                                 Token(token, db.personWithEmail(it.email.trim()))
                             }

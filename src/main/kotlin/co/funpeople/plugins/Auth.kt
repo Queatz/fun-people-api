@@ -31,7 +31,7 @@ fun Authentication.Configuration.bearer(
 
     provider.pipeline.intercept(AuthenticationPipeline.RequestAuthentication) { context ->
         val credentials = call.request.header(HttpHeaders.Authorization)?.split("\\s+".toRegex())?.takeIf {
-            it.size == 2 && it.first().equals("Bearer", true)
+            it.size == 2 && it.first() == "Bearer"
         }?.last()?.takeIf { it.isNotEmpty() }
 
         val principal = credentials?.let { authenticate(call, BearerAuth(it)) }

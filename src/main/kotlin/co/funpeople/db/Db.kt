@@ -21,34 +21,36 @@ class Db {
         .setup()
 
     internal fun <T : Model> one(klass: KClass<T>, query: String, parameters: Map<String, Any?> = mapOf()) =
-        db.query(
+        synchronized(db) { db.query(
             query,
             if (query.contains("@@collection")) mutableMapOf("@collection" to klass.collection()) + parameters else parameters,
             klass.java
-        ).stream().findFirst().takeIf { it.isPresent }?.get()
+        ) }.stream().findFirst().takeIf { it.isPresent }?.get()
 
     internal fun <T : Model> list(klass: KClass<T>, query: String, parameters: Map<String, Any?> = mapOf()) =
-        db.query(
+        synchronized(db) { db.query(
             query,
             if (query.contains("@@collection")) mutableMapOf("@collection" to klass.collection()) + parameters else parameters,
             klass.java
-        ).asListRemaining().toList()
+        ) }.asListRemaining().toList()
 
     internal fun <T : Any> query(klass: KClass<T>, query: String, parameters: Map<String, Any?> = mapOf()) =
-        db.query(
+        synchronized(db) { db.query(
             query,
             parameters,
             klass.java
-        ).asListRemaining().toList()
+        ).asListRemaining() }.toList()
 
-    fun <T : Model>insert(model: T) = db.collection(model::class.collection()).insertDocument(model.apply { createdAt = Clock.System.now() }, DocumentCreateOptions().returnNew(true))!!.new!!
-    fun <T : Model>update(model: T) = db.collection(model::class.collection()).updateDocument(model.id?.asKey(), model, DocumentUpdateOptions().returnNew(true))!!.new!!
-    fun <T : Model>delete(model: T) = db.collection(model::class.collection()).deleteDocument(model.id?.asKey())!!
+    fun <T : Model>insert(model: T) = synchronized(db) { db.collection(model::class.collection()).insertDocument(model.apply { createdAt = Clock.System.now() }, DocumentCreateOptions().returnNew(true))!!.new!! }
+    fun <T : Model>update(model: T) = synchronized(db) { db.collection(model::class.collection()).updateDocument(model.id?.asKey(), model, DocumentUpdateOptions().returnNew(true))!!.new!! }
+    fun <T : Model>delete(model: T) = synchronized(db) { db.collection(model::class.collection()).deleteDocument(model.id?.asKey())!! }
 
-    fun <T : Model> document(klass: KClass<T>, id: String) = try {
-        db.collection(klass.collection()).getDocument(id.asKey(), klass.java)
-    } catch (e: ArangoDBException) {
-        null
+    fun <T : Model> document(klass: KClass<T>, id: String) = synchronized(db) {
+        try {
+            db.collection(klass.collection()).getDocument(id.asKey(), klass.java)
+        } catch (e: ArangoDBException) {
+            null
+        }
     }
 }
 
