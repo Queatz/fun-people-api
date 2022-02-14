@@ -10,14 +10,12 @@ import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
-import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.*
-import kotlin.collections.LinkedHashSet
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
@@ -54,23 +52,21 @@ fun Application.configureSockets() {
     }
 
     routing {
-        val connections = Collections.synchronizedSet<Connection?>(LinkedHashSet())
+        val connections = Collections.synchronizedSet(mutableSetOf<Connection>())
 
         webSocket("/ws") {
             val thisConnection = Connection(this)
             connections += thisConnection
 
-            fun relay(members: List<Member>, frame: Frame) {
-                launch {
-                    connections.filter {
-                        members.any { member -> member.personId == it.person?.id }
-                    }.forEach {
-                        it.session.outgoing.send(frame)
-                    }
+            suspend fun relay(members: List<Member>, frame: Frame) {
+                for (it in connections.filter {
+                    members.any { member -> member.personId == it.person?.id }
+                }) {
+                    it.session.send(frame.copy())
                 }
             }
 
-            fun receiveMessage(messageText: Message) {
+            suspend fun receiveMessage(messageText: Message) {
                 if (thisConnection.person == null) {
                     return
                 }
@@ -102,7 +98,7 @@ fun Application.configureSockets() {
                 relay(members, Frame.Text(json.encodeToString(message)))
             }
 
-            fun receiveTyping(typing: TypingMessage) {
+            suspend fun receiveTyping(typing: TypingMessage) {
                 if (thisConnection.person == null) {
                     return
                 }
@@ -113,11 +109,10 @@ fun Application.configureSockets() {
                     return
                 }
 
-                relay(members.filter {
-                    it.personId != thisConnection.person!!.id
-                }, Frame.Text(json.encodeToString(typing.also {
-                    it.name = thisConnection.person!!.name
-                })))
+                relay(
+                    members.filter { it.personId != thisConnection.person!!.id },
+                    Frame.Text(json.encodeToString(typing.also { it.name = thisConnection.person!!.name }))
+                )
             }
 
             for (frame in incoming) {
