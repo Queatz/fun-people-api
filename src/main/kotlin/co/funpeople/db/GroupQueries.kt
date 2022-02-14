@@ -36,6 +36,7 @@ fun Db.groups(personId: String) = list(Group::class, """
                     return message
             )
             sort latest.createdAt desc
+            limit 20
             return merge(x, {
                 members: (
                     for member in ${Member::class.collection()}

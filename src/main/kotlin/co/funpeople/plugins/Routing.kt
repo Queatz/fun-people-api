@@ -32,7 +32,7 @@ fun Application.configureRouting() {
                     ?.let { db.personWithEmail(it) }
                     ?.let { PersonPrincipal(it) }
             }
-        }
+         }
     }
 
     routing {
