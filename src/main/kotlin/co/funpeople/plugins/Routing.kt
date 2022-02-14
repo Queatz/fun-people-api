@@ -188,6 +188,14 @@ fun Application.configureRouting() {
                 val person = call.principal<PersonPrincipal>()!!.person
                 val member = db.member(call.parameters["id"]!!, person.id!!)
 
+                call.receive<LeaveGroupReason>().reason.trim().takeIf { it.isNotBlank() }?.let { reason ->
+                    db.insert(Problem().also {
+                        it.personId = person.id!!
+                        it.groupId = call.parameters["id"]!!
+                        it.problem = reason
+                    })
+                }
+
                 call.respond(
                     if (member == null) {
                         HttpStatusCode.NotFound
@@ -427,6 +435,11 @@ private class Token (
     var token: String = "",
     var person: Person?
 )
+
+@Serializable
+private class LeaveGroupReason {
+    var reason: String = ""
+}
 
 class PersonPrincipal(
     val person: Person

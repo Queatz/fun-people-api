@@ -30,5 +30,6 @@ fun collections() = listOf(
     Auth::class.db {
         ensurePersistentIndex(listOf("token"), PersistentIndexOptions())
         ensurePersistentIndex(listOf("email"), PersistentIndexOptions())
-    }
+    },
+    Problem::class.db {}
 )
