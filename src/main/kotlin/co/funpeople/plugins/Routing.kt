@@ -3,6 +3,7 @@ package co.funpeople.plugins
 import co.funpeople.db.*
 import co.funpeople.models.*
 import co.funpeople.services.Emailing
+import co.funpeople.services.ScheduledEmails
 import co.funpeople.services.Secrets
 import com.mapbox.api.geocoding.v5.GeocodingCriteria
 import com.mapbox.api.geocoding.v5.MapboxGeocoding
@@ -13,6 +14,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import java.util.logging.Logger
@@ -21,10 +23,16 @@ import kotlin.random.Random
 val db = Db()
 val secrets = Secrets()
 val emailing = Emailing()
+val scheduledEmails = ScheduledEmails()
 
 val signInCodes = mutableMapOf<String, String>()
 
 fun Application.configureRouting() {
+
+    launch {
+        scheduledEmails.start(coroutineContext)
+    }
+
     install(Authentication) {
         bearer {
             validate {
