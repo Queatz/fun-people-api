@@ -53,7 +53,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("io.ktor:ktor-network-tls-certificates:$ktor_version")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.2")
-    implementation("com.arangodb:arangodb-java-driver:6.16.0")
+    implementation("com.arangodb:arangodb-java-driver:6.16.1")
     implementation("com.arangodb:velocypack:2.5.4")
     implementation("com.arangodb:velocypack-module-jdk8:1.1.1")
     implementation("com.sun.mail:javax.mail:1.6.2")
@@ -65,7 +65,7 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 }
 
-tasks{
+tasks {
     shadowJar {
         manifest {
             attributes(Pair("Main-Class", "com.example.ApplicationKt"))

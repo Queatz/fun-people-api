@@ -1,13 +1,12 @@
 package co.funpeople.db
 
-import co.funpeople.models.*
+import co.funpeople.models.Model
 import com.arangodb.*
 import com.arangodb.entity.CollectionType
 import com.arangodb.entity.EdgeDefinition
 import com.arangodb.model.CollectionCreateOptions
 import com.arangodb.model.DocumentCreateOptions
 import com.arangodb.model.DocumentUpdateOptions
-import com.arangodb.velocypack.module.jdk8.VPackJdk8Module
 import kotlinx.datetime.Clock
 import kotlin.reflect.KClass
 

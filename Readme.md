@@ -9,10 +9,11 @@ https://www.arangodb.com/download-major/ubuntu/
 
 ```shell
 echo '{"default":"en_US.UTF-8"}' > /var/lib/arangodb3/LANGUAGE
+service arangodb3 restart
 
 arangosh --server.username root --server.password root
 arangosh> const users = require('@arangodb/users')
-arangosh> users.save('fun', 'fun');
+arangosh> users.save('fun', 'fun')
 arangosh> db._createDatabase('fun')
 arangosh> users.grantDatabase('fun', 'fun', 'rw')
 ```
