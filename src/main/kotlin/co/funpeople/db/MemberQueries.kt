@@ -7,7 +7,7 @@ import co.funpeople.models.Person
 fun Db.members(groupId: String) = list(
     Member::class, """
         for x in @@collection
-            filter x.${Member::groupId.name} == @groupId
+            filter x.${f(Member::groupId)} == @groupId
             return x
     """, mapOf(
         "groupId" to groupId.asId(Group::class)
@@ -17,8 +17,8 @@ fun Db.members(groupId: String) = list(
 fun Db.member(groupId: String, personId: String) = one(
     Member::class, """
         for x in @@collection
-            filter x.${Member::groupId.name} == @groupId
-                and x.${Member::personId.name} == @personId
+            filter x.${f(Member::groupId)} == @groupId
+                and x.${f(Member::personId)} == @personId
             return x
     """, mapOf(
         "groupId" to groupId.asId(Group::class),

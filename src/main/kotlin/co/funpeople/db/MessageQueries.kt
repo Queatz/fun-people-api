@@ -8,7 +8,7 @@ import co.funpeople.models.Person
 fun Db.messagesOfGroup(groupId: String) = list(
     Message::class, """
         for x in @@collection
-            filter x.${Message::groupId.name} == @groupId
+            filter x.${f(Message::groupId)} == @groupId
             sort x.createdAt desc
             limit 20
             return merge(x, {
@@ -24,13 +24,13 @@ fun Db.unreadMessages() = query(
         for person in ${Person::class.collection()}
             let unread = sum(
                 for member in ${Member::class.collection()}
-                        filter member.${Member::personId.name} == person._id
+                        filter member.${f(Member::personId)} == person._id
                     for group in ${Group::class.collection()}
-                        filter member.${Member::groupId.name} == group._id
+                        filter member.${f(Member::groupId)} == group._id
                         return count(
                             for message in ${Message::class.collection()}
-                                filter message.${Message::groupId.name} == group._id
-                                    and message.${Message::createdAt.name} > date_add(member.${Member::readUntil.name}, 1, 'day')
+                                filter message.${f(Message::groupId)} == group._id
+                                    and message.${f(Message::createdAt)} > date_add(member.${f(Member::readUntil)}, 1, 'day')
                                 return true
                         )
         )

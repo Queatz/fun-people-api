@@ -9,6 +9,7 @@ import com.arangodb.model.DocumentCreateOptions
 import com.arangodb.model.DocumentUpdateOptions
 import kotlinx.datetime.Clock
 import kotlin.reflect.KClass
+import kotlin.reflect.KMutableProperty1
 
 class Db {
     private val db = ArangoDB.Builder()
@@ -101,3 +102,5 @@ internal fun String.asKey() = this.split("/").last()
 internal fun <T : Model> String.asId(klass: KClass<T>) = if (this.contains("/")) this else "${klass.collection()}/$this"
 
 fun <T : Model> KClass<T>.collection() = simpleName!!.lowercase()
+
+fun Db.f(property: KMutableProperty1<*, *>) = property.name

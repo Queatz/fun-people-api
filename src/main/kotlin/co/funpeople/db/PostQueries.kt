@@ -3,15 +3,16 @@ package co.funpeople.db
 import co.funpeople.models.Location
 import co.funpeople.models.Person
 import co.funpeople.models.Post
+import kotlin.reflect.KMutableProperty1
 
 fun Db.postsByLocation(locationId: String) = list(
     Post::class, """
         for x in @@collection
-            filter x.${Post::locationId.name} == @locationId
-            sort x.${Post::createdAt.name} desc
+            filter x.${f(Post::locationId)} == @locationId
+            sort x.${f(Post::createdAt)} desc
             limit 20
             return merge(x, {
-                ${Post::person.name}: unset(document(x.${Post::personId.name}), 'email', 'seen')
+                ${f(Post::person)}: unset(document(x.${f(Post::personId)}), 'email', 'seen')
             })
     """,
     mapOf(
@@ -22,9 +23,9 @@ fun Db.postsByLocation(locationId: String) = list(
 fun Db.postsByPerson(personId: String) = list(
     Post::class, """
         for x in @@collection
-            filter x.${Post::personId.name} == @personId
+            filter x.${f(Post::personId)} == @personId
             return merge(x, {
-                ${Post::location.name}: document(x.${Post::locationId.name})
+                ${f(Post::location)}: document(x.${f(Post::locationId)})
             })
     """,
     mapOf(
@@ -35,10 +36,10 @@ fun Db.postsByPerson(personId: String) = list(
 fun Db.postsByPersonAndLocation(personId: String, locationId: String) = list(
     Post::class, """
         for x in @@collection
-            filter x.${Post::personId.name} == @personId
-                and x.${Post::locationId.name} == @locationId
+            filter x.${f(Post::personId)} == @personId
+                and x.${f(Post::locationId)} == @locationId
             return merge(x, {
-                ${Post::location.name}: document(x.${Post::locationId.name})
+                ${f(Post::location)}: document(x.${f(Post::locationId)})
             })
     """,
     mapOf(

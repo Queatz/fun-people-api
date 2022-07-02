@@ -4,9 +4,9 @@ import co.funpeople.models.Person
 
 fun Db.personWithEmail(email: String) = one(
     Person::class, """
-        upsert { ${Person::email.name}: @email }
-            insert { ${Person::email.name}: @email, ${Person::seen.name}: DATE_ISO8601(DATE_NOW()), ${Person::createdAt.name}: DATE_ISO8601(DATE_NOW()) }
-            update { ${Person::seen.name}: DATE_ISO8601(DATE_NOW()) }
+        upsert { ${f(Person::email)}: @email }
+            insert { ${f(Person::email)}: @email, ${f(Person::seen)}: DATE_ISO8601(DATE_NOW()), ${f(Person::createdAt)}: DATE_ISO8601(DATE_NOW()) }
+            update { ${f(Person::seen)}: DATE_ISO8601(DATE_NOW()) }
             in @@collection
             return NEW || OLD
     """,

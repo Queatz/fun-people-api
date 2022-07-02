@@ -5,9 +5,9 @@ import co.funpeople.models.Location
 fun Db.locationWithName(name: String) = one(
     Location::class, """
         for x in @@collection
-            filter x.${Location::name.name} == @name
+            filter x.${f(Location::name)} == @name
             return merge(x, {
-                ${Location::path.name}: x.locationId == null ? [] : [ document(x.locationId) ]
+                ${f(Location::path)}: x.locationId == null ? [] : [ document(x.locationId) ]
             })
     """, mapOf(
         "name" to name
@@ -27,10 +27,10 @@ fun Db.updateLocationActivity(locationId: String) = one(
 fun Db.locationWithNameAndParent(name: String, locationId: String?) = one(
     Location::class, """
         for x in @@collection
-            filter x.${Location::name.name} == @name
-            filter x.${Location::locationId.name} == @locationId
+            filter x.${f(Location::name)} == @name
+            filter x.${f(Location::locationId)} == @locationId
             return merge(x, {
-                ${Location::path.name}: x.${Location::locationId.name} == null ? [] : [ document(x.${Location::locationId.name}) ]
+                ${f(Location::path)}: x.${f(Location::locationId)} == null ? [] : [ document(x.${f(Location::locationId)}) ]
             })
     """, mapOf(
         "locationId" to locationId,
@@ -45,15 +45,15 @@ fun Db.locationWithName(path: List<String>) = one(
         let path = (
           for p in z
             return first(
-              for l in @@collection
-                filter l.name == p.name && document(l.${Location::locationId.name}).${Location::name.name} == p.locationName
+              for l in @@collectionf(
+                filter lf() == p) && document(l.${f(Location::locationId)}).${f(Location::name)} == p.locationName
                 return l
             )
         )
         filter path all != null
         let x = last(path) 
         return merge(x, {
-                ${Location::path.name}: x.${Location::locationId.name} == null ? [] : [ document(x.${Location::locationId.name}) ]
+                ${f(Location::path)}: x.${f(Location::locationId)} == null ? [] : [ document(x.${f(Location::locationId)}) ]
             })
     """, mapOf(
         "path" to path
@@ -63,9 +63,9 @@ fun Db.locationWithName(path: List<String>) = one(
 fun Db.locationWithUrl(url: String) = one(
     Location::class, """
         for x in @@collection
-            filter x.${Location::url.name} == @url
+            filter x.${f(Location::url)} == @url
             return merge(x, {
-                ${Location::path.name}: x.${Location::locationId.name} == null ? [] : [ document(x.${Location::locationId.name}) ]
+                ${f(Location::path)}: x.${f(Location::locationId)} == null ? [] : [ document(x.${f(Location::locationId)}) ]
             })
     """, mapOf(
         "url" to url
@@ -75,11 +75,11 @@ fun Db.locationWithUrl(url: String) = one(
 fun Db.locationsOfLocation(locationId: String) = list(
     Location::class, """
         for x in @@collection
-            filter x.${Location::locationId.name} == @locationId
-            sort x.${Location::activity.name} desc
+            filter x.${f(Location::locationId)} == @locationId
+            sort x.${f(Location::activity)} desc
             limit 20
             return merge(x, {
-                ${Location::path.name}: x.${Location::locationId.name} == null ? [] : [ document(x.${Location::locationId.name}) ]
+                ${f(Location::path)}: x.${f(Location::locationId)} == null ? [] : [ document(x.${f(Location::locationId)}) ]
             })
     """, mapOf(
         "locationId" to locationId.asId(Location::class)
@@ -92,7 +92,7 @@ fun Db.topLocations() = list(
             sort rand()
             limit 5
             return merge(x, {
-                ${Location::path.name}: x.${Location::locationId.name} == null ? [] : [ document(x.${Location::locationId.name}) ]
+                ${f(Location::path)}: x.${f(Location::locationId)} == null ? [] : [ document(x.${f(Location::locationId)}) ]
             })
     """
 )

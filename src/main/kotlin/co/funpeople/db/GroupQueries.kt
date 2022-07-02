@@ -8,8 +8,8 @@ fun Db.groupOf(memberIds: List<String>) = one(Group::class, """
         for x in @@collection
             filter count(
                 for member in ${Member::class.collection()}
-                    filter member.${Member::groupId.name} == x._id
-                        and member.${Member::personId.name} in @memberIds
+                    filter member.${f(Member::groupId)} == x._id
+                        and member.${f(Member::personId)} in @memberIds
                     return member
             ) == ${memberIds.size}
             limit 1
@@ -23,14 +23,14 @@ fun Db.groups(personId: String) = list(Group::class, """
         for x in @@collection
             filter count(
                 for member in ${Member::class.collection()}
-                    filter member.${Member::groupId.name} == x._id
-                        and member.${Member::personId.name} == @personId
+                    filter member.${f(Member::groupId)} == x._id
+                        and member.${f(Member::personId)} == @personId
                     return member
             ) == 1
             limit 20
             let latest = first(
                 for message in ${Message::class.collection()}
-                    filter message.${Member::groupId.name} == x._id
+                    filter message.${f(Member::groupId)} == x._id
                     sort message.createdAt desc
                     limit 1
                     return message
@@ -40,7 +40,7 @@ fun Db.groups(personId: String) = list(Group::class, """
             return merge(x, {
                 members: (
                     for member in ${Member::class.collection()}
-                        filter member.${Member::groupId.name} == x._id
+                        filter member.${f(Member::groupId)} == x._id
                         return merge(member, {
                             person: unset(document(member.personId), 'email', 'seen')
                         })
