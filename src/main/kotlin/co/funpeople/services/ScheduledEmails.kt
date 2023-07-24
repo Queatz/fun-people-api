@@ -12,7 +12,6 @@ import java.util.logging.Logger
 import kotlin.coroutines.CoroutineContext
 
 class ScheduledEmails {
-    @OptIn(DelicateCoroutinesApi::class)
     suspend fun start(coroutineContext: CoroutineContext) {
         delayUntil8amTomorrow()
 
